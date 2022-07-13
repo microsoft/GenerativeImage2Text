@@ -9,12 +9,12 @@ This repo presents some example codes to reproduce some results in
   install.
   ```shell
   pip install git+https://github.com/microsoft/azfuse.git
-  cd GenerativeImage2Text
   ```
 
 - Download the source code by
   ```shell
   git clone https://github.com/microsoft/GenerativeImage2Text.git
+  cd GenerativeImage2Text
   ```
 
 - Install the package
