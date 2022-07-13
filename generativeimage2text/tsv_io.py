@@ -134,7 +134,6 @@ class TSVFile(object):
         self.use_mmap = False
         if os.environ.get('QD_TSV_MMAP'):
             self.use_mmap = int(os.environ['QD_TSV_MMAP'])
-        self.use_fuse = False
         #self.has_lineidx_8b = int(os.environ.get('QD_USE_LINEIDX_8B', '0'))
         self.has_lineidx_8b = True
         # the process always keeps the process which opens the
@@ -282,10 +281,6 @@ class TSVFile(object):
 
     def open(self, fname, mode):
         return File.open(fname, mode)
-        #if self.use_fuse:
-            #return self.fuser.open(fname, mode)
-        #else:
-            #return exclusive_open_to_read(fname, mode)
 
     def ensure_lineidx_8b_opened(self):
         if self.fp8b is None:
@@ -330,14 +325,6 @@ class TSVFile(object):
     def get_tsv_fp(self):
         start = time.time()
         fp = File.open(self.tsv_file, 'rb')
-        #if self.use_fuse:
-            #fp = self.fuser.open(self.tsv_file, 'rb')
-        #else:
-            #if not self.open_once:
-                #fp = exclusive_open_to_read(self.tsv_file, 'rb')
-                #self.open_once = True
-            #else:
-                #fp = open(self.tsv_file, 'rb')
         if self.use_mmap:
             mfp = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
         else:
