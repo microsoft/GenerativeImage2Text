@@ -135,11 +135,8 @@ class TSVFile(object):
         if os.environ.get('QD_TSV_MMAP'):
             self.use_mmap = int(os.environ['QD_TSV_MMAP'])
         self.use_fuse = False
-        #if os.environ.get('QD_TSV_USE_FUSE'):
-            #self.use_fuse = int(os.environ['QD_TSV_USE_FUSE'])
-            #from qd.cloud_storage import create_cloud_fuse
-            #self.fuser = create_cloud_fuse()
-        self.has_lineidx_8b = int(os.environ.get('QD_USE_LINEIDX_8B', '0'))
+        #self.has_lineidx_8b = int(os.environ.get('QD_USE_LINEIDX_8B', '0'))
+        self.has_lineidx_8b = True
         # the process always keeps the process which opens the
         # file. If the pid is not equal to the currrent pid, we will re-open
         # teh file.
