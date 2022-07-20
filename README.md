@@ -3,13 +3,9 @@ This repo presents some example codes to reproduce some results in
 [GIT: A Generative Image-to-text Transformer for Vision and Language](https://arxiv.org/abs/2205.14100).
 
 # Installation
-- Install [azfuse](https://github.com/microsoft/azfuse) by the following. The tool is used to
+- Install [azfuse](https://github.com/microsoft/azfuse). The tool is used to
   automatically download the data. The configuration of
-  AzFuse has already been in this repo, and only the package is required to
-  install.
-  ```shell
-  pip install git+https://github.com/microsoft/azfuse.git
-  ```
+  AzFuse has already been in this repo.
 
 - Download the source code by
   ```shell
