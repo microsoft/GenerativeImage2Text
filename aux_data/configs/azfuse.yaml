@@ -1,0 +1,8 @@
+- cache: /tmp/publicgit/data
+  local: data
+  remote: tsv_data
+  storage_account: publicgit
+- cache: /tmp/publicgit/output
+  local: output
+  remote: output
+  storage_account: publicgit
