@@ -137,7 +137,6 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
     question_tsv = TSVFile(question_tsv) if question_tsv else None
 
     transforms = get_image_transform(param)
-    import ipdb;ipdb.set_trace(context=15)
 
     # model
     model = get_git_model(tokenizer, param)

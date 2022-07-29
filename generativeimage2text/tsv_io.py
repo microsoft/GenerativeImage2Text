@@ -349,8 +349,6 @@ class TSVFile(object):
             self._mfp.close()
             self._fp.close()
             logging.info('re-open {} because the process id changed'.format(self.tsv_file))
-            from qd.common import print_opened_files
-            print_opened_files()
             self._mfp, self._fp = self.get_tsv_fp()
             self.pid = os.getpid()
 

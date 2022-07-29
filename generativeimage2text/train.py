@@ -75,8 +75,13 @@ def get_data(image_file, prefix, target, tokenizer, image_transform):
 def get_image_transform(cfg):
     return get_multi_scale_image_transform(cfg, is_train=True)
 
+def get_default_mean():
+    return [0.485, 0.456, 0.406]
+
+def get_default_std():
+    return [0.229, 0.224, 0.225]
+
 def get_transform_image_norm(cfg, default=None):
-    from qd.data_layer.transform import get_default_mean, get_default_std
     if cfg.data_normalize == 'default':
         normalize = transforms.Normalize(
             mean=get_default_mean(), std=get_default_std())
@@ -115,9 +120,23 @@ def get_transform_image(cfg, is_train):
         raise NotImplementedError(train_transform)
     return transform
 
+class ImageTransform2Images(object):
+    def __init__(self, sep_transform, first_joint=None):
+        self.image_transform = sep_transform
+        self.first_joint = first_joint
+
+    def __call__(self, imgs):
+        if self.first_joint is not None:
+            imgs = self.first_joint(imgs)
+        return [self.image_transform(im) for im in imgs]
+
+    def __repr__(self):
+        return 'ImageTransform2Images(image_transform={})'.format(
+            self.image_transform,
+        )
+
 def get_transform_images(cfg, is_train):
     trans = get_transform_image(cfg, is_train)
-    from qd.data_layer.transform import ImageTransform2Images
     trans = ImageTransform2Images(trans)
     return trans
 

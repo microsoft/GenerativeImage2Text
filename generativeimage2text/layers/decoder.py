@@ -617,6 +617,160 @@ def convert2valid(shape, length=None, device='cuda'):
         valid = ones.cumsum(dim=1) <= length.unsqueeze(1)
     return valid
 
+class SmoothLabelCrossEntropyLoss(nn.Module):
+    def __init__(self, eps=0.1, log_prefix='', ignore_index=None):
+        super().__init__()
+        self.eps = eps
+        self.log_soft = nn.LogSoftmax(dim=1)
+        #self.kl = nn.KLDivLoss(reduction='batchmean')
+        self.kl = nn.KLDivLoss(reduction='none')
+
+        # for verbose printing only
+        #self.register_buffer('iter', torch.tensor(0))
+        self.iter = 0
+        self.max_loss = 0
+        self.min_loss = 0
+        self.log_prefix = log_prefix
+        self.ignore_index = ignore_index
+
+    def forward(self, feature, target):
+        # if it is fp16, convert it to fp32 explicitly as some trainer will not
+        # do automatically
+        feature = feature.float()
+        if self.ignore_index is not None:
+            valid_mask = target != self.ignore_index
+            target = target[valid_mask]
+            feature = feature[valid_mask]
+        assert target.numel() > 0
+        debug_print = (self.iter % 100) == 0
+        self.iter += 1
+        eps = self.eps
+        n_class = feature.size(1)
+        one_hot = torch.zeros_like(feature).scatter(1, target.view(-1, 1), 1)
+        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+        log_prb = self.log_soft(feature)
+        if debug_print:
+            with torch.no_grad():
+                prob = torch.nn.functional.softmax(feature.detach(), dim=1)
+                num = feature.size(0)
+                avg_prob = prob[torch.arange(num), target].mean()
+                logging.info('{}: iter={}, avg pos = {}, max loss = {}, min loss = {}'.format(
+                    self.log_prefix,
+                    self.iter,
+                    avg_prob,
+                    self.max_loss,
+                    self.min_loss,
+                ))
+                self.max_loss = 0
+                self.min_loss = 10000000
+        loss = self.kl(log_prb, one_hot)
+        with torch.no_grad():
+            if len(loss) > 0:
+                self.max_loss = max(self.max_loss, loss.max().cpu())
+                self.min_loss = min(self.min_loss, loss.min().cpu())
+        return loss.sum(dim=1).mean()
+
+#class ScstRewardCriterion(torch.nn.Module):
+    #CIDER_REWARD_WEIGHT = 1
+
+    #def __init__(self, cider_cached_tokens='corpus', baseline_type='greedy'):
+        #from .cider.pyciderevalcap.ciderD.ciderD import CiderD
+        #self.CiderD_scorer = CiderD(df=cider_cached_tokens)
+        #assert baseline_type in ['greedy', 'sample']
+        #self.baseline_type = baseline_type
+        #self._cur_score = None
+        #self._greedy_score = None
+        #self._pos_reward = None
+        #self._neg_reward = None
+        #super().__init__()
+
+    #def forward(self, gt_res, greedy_res, sample_res, sample_logprobs):
+        #batch_size = len(gt_res)
+        #sample_res_size = len(sample_res)
+        #seq_per_img = sample_res_size // batch_size
+
+        #gen_res = []
+        #gen_res.extend(sample_res)
+        #gt_idx = [i // seq_per_img for i in range(sample_res_size)]
+        #if self.baseline_type == 'greedy':
+            #assert len(greedy_res) == batch_size
+            #gen_res.extend(greedy_res)
+            #gt_idx.extend([i for i in range(batch_size)])
+
+        #scores = self._calculate_eval_scores(gen_res, gt_idx, gt_res)
+
+        #if self.baseline_type == 'greedy':
+            #import numpy as np
+            #baseline = scores[-batch_size:][:, np.newaxis]
+        #else:
+            #sc_ = scores.reshape(batch_size, seq_per_img)
+            #baseline = (sc_.sum(1, keepdims=True) - sc_) / (sc_.shape[1] - 1)
+
+        ## sample - baseline
+        #reward = scores[:sample_res_size].reshape(batch_size, seq_per_img)
+        #with torch.no_grad():
+            #self._cur_score = reward.mean()
+            #self._greedy_score = scores[sample_res_size:].mean()
+        #reward = reward - baseline
+        #with torch.no_grad():
+            #self._pos_reward = (reward > 0).sum()
+            #self._neg_reward = (reward < 0).sum()
+        #reward = reward.reshape(sample_res_size)
+
+        #reward = torch.as_tensor(reward, device=sample_logprobs.device, dtype=torch.float)
+        #loss = - sample_logprobs * reward
+        #loss = loss.mean()
+        #return loss
+
+    #def get_score(self):
+        #return self._cur_score
+
+    #def get_info(self):
+        #return {
+            #'curr_score': self._cur_score,
+            #'greedy_score': self._greedy_score,
+            #'pos_reward': self._pos_reward,
+            #'neg_reward': self._neg_reward,
+        #}
+
+    #def _calculate_eval_scores(self, gen_res, gt_idx, gt_res):
+        #'''
+        #gen_res: generated captions, list of str
+        #gt_idx: list of int, of the same length as gen_res
+        #gt_res: ground truth captions, list of list of str.
+            #gen_res[i] corresponds to gt_res[gt_idx[i]]
+            #Each image can have multiple ground truth captions
+        #'''
+        #gen_res_size = len(gen_res)
+
+        #from collections import OrderedDict
+        #res = OrderedDict()
+        #for i in range(gen_res_size):
+            #res[i] = [self._wrap_sentence(gen_res[i])]
+
+        #gts = OrderedDict()
+        #gt_res_ = [
+            #[self._wrap_sentence(gt_res[i][j]) for j in range(len(gt_res[i]))]
+                #for i in range(len(gt_res))
+        #]
+        #for i in range(gen_res_size):
+            #gts[i] = gt_res_[gt_idx[i]]
+
+        #res_ = [{'image_id':i, 'caption': res[i]} for i in range(len(res))]
+        #_, batch_cider_scores = self.CiderD_scorer.compute_score(gts, res_)
+        #scores = self.CIDER_REWARD_WEIGHT * batch_cider_scores
+        #return scores
+
+    #def _wrap_sentence(self, s):
+        ## ensure the sentence ends with <eos> token
+        ## in order to keep consisitent with cider_cached_tokens
+        #r = s.strip()
+        #if r.endswith('.'):
+            #r = r[:-1]
+        #r += ' <eos>'
+        #return r
+
+
 class CaptioningModel(nn.Module):
     def __init__(
         self,
@@ -648,18 +802,18 @@ class CaptioningModel(nn.Module):
         self.tokenizer = tokenizer
 
         if self.scst:
-            from qd.mask.modeling.captioning.utils_caption_evaluate import (
-                    ScstRewardCriterion)
-            self.scst_criterion = ScstRewardCriterion(
-                cider_cached_tokens='data/coco_caption/gt/coco-train-words.p',
-                baseline_type='greedy',
-            )
-            self.scst_fwd_times = 0
-            self.scst_temperature = scst_temperature
+            raise NotImplementedError
+            #from .utils_caption_evaluate import (
+                    #ScstRewardCriterion)
+            #self.scst_criterion = ScstRewardCriterion(
+                #cider_cached_tokens='data/coco_caption/gt/coco-train-words.p',
+                #baseline_type='greedy',
+            #)
+            #self.scst_fwd_times = 0
+            #self.scst_temperature = scst_temperature
         if loss_type is None:
             self.loss = nn.CrossEntropyLoss(ignore_index=self.padding_idx)
         elif loss_type == 'smooth':
-            from qd.layers.loss import SmoothLabelCrossEntropyLoss
             self.loss = SmoothLabelCrossEntropyLoss(ignore_index=self.padding_idx)
         else:
             raise NotImplementedError(loss_type)
