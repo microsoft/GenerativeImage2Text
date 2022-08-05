@@ -30,8 +30,17 @@ This repo presents some example codes to reproduce some results in
   ```
   - If `prefix` is empty, it is effectively the image captioning task.
   - If `prefix` is a question, it is effectively the visual/image question answering task.
-  - The `model_name` can be `GIT_BASE`, `GIT_BASE_COCO`, `GIT_BASE_VQAv2`,
-    `GIT_LARGE`, `GIT_LARGE_COCO`, `GIT_LARGE_VQAv2`.
+  - The `model_name` can be as follows
+
+    | model_name      | pretrained?        | fine-tuned?   |
+    |-----------------|--------------------|---------------|
+    | GIT_BASE        | Yes; on 4M images  | NO            |
+    | GIT_BASE_COCO   | No                 | Yes; on COCO  |
+    | GIT_BASE_VQAv2  | No                 | Yes; on VQAv2 |
+    | GIT_LARGE       | Yes; on 14M images | No            |
+    | GIT_LARGE_COCO  | No                 | Yes; on COCO  |
+    | GIT_LARGE_VQAv2 | No                 | Yes; on VQAv2 |
+  
 
 - Inference on a [TSV](https://en.wikipedia.org/wiki/Tab-separated_values) file, which is a collection of multiple images.
   - Data format (for information only)
