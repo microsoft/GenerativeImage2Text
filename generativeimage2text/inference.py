@@ -66,14 +66,18 @@ class MinMaxResizeForTest(object):
 
 def test_git_inference_single_image(image_path, model_name, prefix):
     param = {}
-    if File.isfile(f'output/{model_name}/parameter.yaml'):
-        param = load_from_yaml_file(f'output/{model_name}/parameter.yaml')
+    if File.isfile(f'aux_data/models/{model_name}/parameter.yaml'):
+        param = load_from_yaml_file(f'aux_data/models/{model_name}/parameter.yaml')
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-    img = load_image_by_pil(image_path)
+    if isinstance(image_path, str):
+        image_path = [image_path]
+    # if it is more than 1 image, it is normally a video with multiple image
+    # frames
+    img = [load_image_by_pil(i) for i in image_path]
 
     transforms = get_image_transform(param)
-    img = transforms(img)
+    img = [transforms(i) for i in img]
 
     # model
     model = get_git_model(tokenizer, param)
@@ -82,7 +86,7 @@ def test_git_inference_single_image(image_path, model_name, prefix):
     load_state_dict(model, checkpoint)
     model.cuda()
     model.eval()
-    img = img.cuda().unsqueeze(0)
+    img = [i.unsqueeze(0).cuda() for i in img]
 
     # prefix
     max_text_len = 40

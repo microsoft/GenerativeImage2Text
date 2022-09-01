@@ -20,27 +20,51 @@ This repo presents some example codes to reproduce some results in
   ```
 
 # Inference
-- Inference on single image:
+- Inference on a single image or multiple frames:
   ```shell
+  # single image, captioning
   AZFUSE_TSV_USE_FUSE=1 python -m generativeimage2text.inference -p "{'type': 'test_git_inference_single_image', \
         'image_path': 'aux_data/images/1.jpg', \
         'model_name': 'GIT_BASE', \
         'prefix': '', \
   }"
+  # single image, question answering
+  AZFUSE_TSV_USE_FUSE=1 python -m generativeimage2text.inference -p "{'type': 'test_git_inference_single_image', \
+        'image_path': 'aux_data/images/1.jpg', \
+        'model_name': 'GIT_BASE_VQAv2', \
+        'prefix': 'what is it?', \
+  }"
+  # multiple images, captioning
+  AZFUSE_TSV_USE_FUSE=1 python -m generativeimage2text.inference -p "{'type': 'test_git_inference_single_image', \
+        'image_path': ['aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg'], \
+        'model_name': 'GIT_BASE_VATEX', \
+        'prefix': '', \
+  }"
+  # multiple images, question answering
+  AZFUSE_TSV_USE_FUSE=1 python -m generativeimage2text.inference -p "{'type': 'test_git_inference_single_image', \
+        'image_path': ['aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg', 'aux_data/images/1.jpg'], \
+        'model_name': 'GIT_BASE_MSRVTT_QA', \
+        'prefix': 'what is it?', \
+  }"
   ```
-  - If `prefix` is empty, it is effectively the image captioning task.
-  - If `prefix` is a question, it is effectively the visual/image question answering task.
-  - The `model_name` can be as follows
+  - If `prefix` is empty, it is effectively the captioning task.
+  - If `prefix` is a question, it is effectively the visual question answering task.
+  - Use a list for `image_path` if it is for video. The example here is 6 identical images, only
+    for a demo purpose. It should be different image frames from a video.
+  - `model_name` here can be the following. Performance details can be found in the reference paper.
 
-    | model_name      | pretrained?        | fine-tuned?   |
-    |-----------------|--------------------|---------------|
-    | GIT_BASE        | Yes; on 4M images  | NO            |
-    | GIT_BASE_COCO   | No                 | Yes; on COCO  |
-    | GIT_BASE_VQAv2  | No                 | Yes; on VQAv2 |
-    | GIT_LARGE       | Yes; on 14M images | No            |
-    | GIT_LARGE_COCO  | No                 | Yes; on COCO  |
-    | GIT_LARGE_VQAv2 | No                 | Yes; on VQAv2 |
-  
+    | model_name          | Information                                   |
+    |---------------------|---------------------------------------------- |
+    | GIT_BASE            | pretrained on 4M images                       |
+    | GIT_BASE_COCO       | fine-tuned on COCO                            |
+    | GIT_BASE_VQAv2      | fine-tuned on VQAv2                           |
+    | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning            |
+    | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering   |
+    | GIT_LARGE           | pretrained on 14M images                      |
+    | GIT_LARGE_COCO      | fine-tuned on COCO                            |
+    | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                           |
+    | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning            |
+    | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering   |
 
 - Inference on a [TSV](https://en.wikipedia.org/wiki/Tab-separated_values) file, which is a collection of multiple images.
   - Data format (for information only)
