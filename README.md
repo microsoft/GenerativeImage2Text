@@ -57,11 +57,13 @@ This repo presents some example codes to reproduce some results in
     |---------------------|---------------------------------------------- |
     | GIT_BASE            | pretrained on 4M images                       |
     | GIT_BASE_COCO       | fine-tuned on COCO                            |
+    | GIT_BASE_TEXTCAPS   | fine-tuned on TextCaps for captioning         |
     | GIT_BASE_VQAv2      | fine-tuned on VQAv2                           |
     | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning            |
     | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering   |
     | GIT_LARGE           | pretrained on 14M images                      |
     | GIT_LARGE_COCO      | fine-tuned on COCO                            |
+    | GIT_LARGE_TEXTCAPS  | fine-tuned on TextCaps for captioning         |
     | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                           |
     | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning            |
     | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering   |
