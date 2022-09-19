@@ -1,0 +1,5 @@
+visual_feature_size: 1024
+image_encoder_type: CLIPViT_L_14
+test_crop_size: 420
+test_respect_ratio_max: 560
+

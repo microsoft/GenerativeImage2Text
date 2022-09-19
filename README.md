@@ -53,20 +53,22 @@ This repo presents some example codes to reproduce some results in
     for a demo purpose. It should be different image frames from a video.
   - `model_name` here can be the following. Performance details can be found in the reference paper.
 
-    | model_name          | Information                                   |
-    |---------------------|---------------------------------------------- |
-    | GIT_BASE            | pretrained on 4M images                       |
-    | GIT_BASE_COCO       | fine-tuned on COCO                            |
-    | GIT_BASE_TEXTCAPS   | fine-tuned on TextCaps for captioning         |
-    | GIT_BASE_VQAv2      | fine-tuned on VQAv2                           |
-    | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning            |
-    | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering   |
-    | GIT_LARGE           | pretrained on 14M images                      |
-    | GIT_LARGE_COCO      | fine-tuned on COCO                            |
-    | GIT_LARGE_TEXTCAPS  | fine-tuned on TextCaps for captioning         |
-    | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                           |
-    | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning            |
-    | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering   |
+    | model_name          | Information                                   | Performance             |
+    |---------------------|---------------------------------------------- | ----------------------- |
+    | GIT_BASE            | pretrained on 4M images                       |                         |
+    | GIT_BASE_COCO       | fine-tuned on COCO                            | CIDEr: 131.4            |
+    | GIT_BASE_TEXTCAPS   | fine-tuned on TextCaps for captioning         | CIDEr: 64.9             |
+    | GIT_BASE_VQAv2      | fine-tuned on VQAv2                           | test-dev: 72.72         |
+    | GIT_BASE_TEXTVQA    | fine-tuned on TextVQA                         | val/acc: 18.81          |
+    | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning            | public/test/CIDer: 60.0 |
+    | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering   | acc: 41.0               |
+    | GIT_LARGE           | pretrained on 14M images                      |                         |
+    | GIT_LARGE_COCO      | fine-tuned on COCO                            | CIDEr: 138.5            |
+    | GIT_LARGE_TEXTCAPS  | fine-tuned on TextCaps for captioning         | CIDEr: 106.3            |
+    | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                           | test-dev: 75.51         |
+    | GIT_LARGE_TEXTVQA   | fine-tuned on TextVQA                         | val/acc: 37.47          |
+    | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning            | public/test/CIDer: 72.5 |
+    | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering   | acc: 42.7               |
 
 - Inference on a [TSV](https://en.wikipedia.org/wiki/Tab-separated_values) file, which is a collection of multiple images.
   - Data format (for information only)
