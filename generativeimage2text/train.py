@@ -243,6 +243,64 @@ def forward_backward_example(image_files, captions, prefixs=None):
     loss.backward()
     logging.info(loss)
 
+def speed_test_forward_backward():
+    duplicate = 32
+    image_files = ['aux_data/images/1.jpg', 'aux_data/images/2.jpg'] * duplicate
+    captions = ['a couple of boats in a large body of water.', 'a view of a mountain with a tree'] * duplicate
+
+    prefixs = [''] * len(captions)
+    cfg = {
+        'crop_region_extend_in_datatransform': 4,
+        'data_normalize': 'clip',
+        'train_crop_size': 224,
+        'input_small_scale': 0.8,
+        'no_color_jitter': True,
+        'no_flip': True,
+        'no_aspect_dist': True,
+        'interpolation': 'bicubic',
+        'min_size_range32': [160, 224], # in pretraining, it is multi-scale from 160 to 224; while for fine-tuning, it is single scale
+        'patch_size': 16,
+        'train_transform': 'vitp',
+    }
+    cfg = Config(cfg, {})
+    all_data = []
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+    image_transform = get_image_transform(cfg)
+    for image_file, prefix, target in zip(image_files, prefixs, captions):
+        data = get_data(image_file, prefix, target,
+                        tokenizer, image_transform)
+        all_data.append(data)
+    data = collate_fn(all_data)
+    logging.info(image_transform)
+    data = recursive_to_device(data, 'cuda')
+
+    param = {}
+    model = get_git_model(tokenizer, param)
+    model.train()
+    model.cuda()
+
+    # warmup
+    for _ in range(2):
+        loss_dict = model(data)
+        loss = sum(loss_dict.values())
+        loss.backward()
+
+    import time
+    start = time.time()
+    for iteration in range(1000):
+        loss_dict = model(data)
+        loss = sum(loss_dict.values())
+        loss.backward()
+        if (iteration % 10) == 0:
+            end = time.time()
+            speed = data['image'].shape[0] * 100 / (end - start)
+            if iteration > 0:
+                logging.info('speed = {}'.format(speed))
+            start = time.time()
+
+    logging.info(loss)
+
+
 if __name__ == '__main__':
     init_logging()
     kwargs = parse_general_args()
