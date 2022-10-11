@@ -273,11 +273,13 @@ def speed_test_forward_backward():
     data = collate_fn(all_data)
     logging.info(image_transform)
     data = recursive_to_device(data, 'cuda')
+    data['image'] = data['image'].to(torch.float16)
 
     param = {}
     model = get_git_model(tokenizer, param)
     model.train()
     model.cuda()
+    model.half()
 
     # warmup
     for _ in range(2):
