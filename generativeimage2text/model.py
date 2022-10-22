@@ -34,7 +34,8 @@ def get_git_model(tokenizer, param):
     decoder = GeneratorWithBeamSearch(
         eos_index=tokenizer.sep_token_id,
         #max_steps=40,
-        max_steps=1024,
+        # max_steps=1024,
+        max_steps=100,
         beam_size=4,
         length_penalty=0.6,
     )

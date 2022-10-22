@@ -353,3 +353,11 @@ build/
 *.egg-info/
 output/
 
+# venv
+/venv/
+
+# code
+/.vscode
+
+# pytorch_lightning
+/lightning_logs
