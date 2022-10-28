@@ -16,7 +16,7 @@ This repo presents some example codes to reproduce some results in
 - Install the package
   ```shell
   pip install -r requirements.txt
-  python setup build develop
+  python setup.py build develop
   ```
 
 # Inference
