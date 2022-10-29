@@ -4,6 +4,10 @@ import csv
 import re
 import pandas as pd
 
+typo_map = {
+    'strech': 'stretch'
+}
+
 first_5_frames_only = {}
 normalize_word_map = {}
 def normalize_words(str):
@@ -11,7 +15,10 @@ def normalize_words(str):
     normalized = []
     for word in words:
         if '_' not in word:
-            normalized.append(word)
+            if word in typo_map:
+                normalized.append(typo_map[word])
+            else:
+                normalized.append(word)
             continue
         parts = word.split('_')
         if parts[-1].isnumeric():
@@ -22,7 +29,7 @@ def normalize_words(str):
 
 
 descriptions = []
-description_pattern = re.compile(r'(\w+)-motif_(\d+).csv')
+description_pattern = re.compile(r'(\w+)-motif_(\d+)(?:_\d+)?.csv')
 for root, _, files in os.walk(os.path.join('description', 'SURF')):
     for file in files:
         match = re.match(description_pattern, file)

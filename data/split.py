@@ -6,11 +6,15 @@ random.seed(42)
 samples = pd.read_csv('samples.csv')
 clips = samples['clip_name'].unique()
 
-test, val = random.sample(clips.tolist(), k=2)
+split = (2, 2)
 
-val_df = samples[samples['clip_name'] == val]
-test_df = samples[samples['clip_name'] == test]
-train_df = samples[~(samples.index.isin(val_df.index) | samples.index.isin(test_df.index))]
+test_val_clips = random.sample(clips.tolist(), k=sum(split))
+test_clips = test_val_clips[:split[0]]
+val_clips = test_val_clips[split[0]:]
+
+val_df = samples[samples['clip_name'].isin(val_clips)]
+test_df = samples[samples['clip_name'].isin(test_clips)]
+train_df = samples[~samples['clip_name'].isin(test_val_clips)]
 
 train_df.to_csv('train.csv', index=False)
 val_df.to_csv('val.csv', index=False)
