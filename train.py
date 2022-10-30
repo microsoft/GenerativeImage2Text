@@ -1,9 +1,12 @@
 import argparse
-from generativeimage2text.pl_model import PoseImageCaptioningModel
-from generativeimage2text.pl_data import CHPDataModule
+
+import pandas as pd
 from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+
+from generativeimage2text.pl_data import CHPDataModule
+from generativeimage2text.pl_model import PoseImageCaptioningModel
 
 
 def main(args):
@@ -54,6 +57,11 @@ def main(args):
         ckpt_path = 'best' if args.do_train else None
         trainer.test(model, data_module, ckpt_path=ckpt_path)
 
+        if args.save_test_results is not None:
+            assert model.test_results is not None
+            results = pd.DataFrame(model.test_results)
+            results.to_csv(args.save_test_results, index=False)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -63,6 +71,7 @@ if __name__ == "__main__":
                         action='store_false', default=True)
     parser.add_argument('--skip_test', dest='do_test',
                         action='store_false', default=True)
+    parser.add_argument('--save_test_results', type=str, default=True)
     parser = Trainer.add_argparse_args(parser)
     parser = PoseImageCaptioningModel.add_argparse_args(parser)
     parser = CHPDataModule.add_argparse_args(parser)

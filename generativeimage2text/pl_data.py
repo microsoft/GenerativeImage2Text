@@ -200,6 +200,7 @@ class CHPDataModule(pl.LightningDataModule):
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
+            shuffle=True,
             collate_fn=self.collate,
             pin_memory=True,
             num_workers=self.dataloader_num_workers
