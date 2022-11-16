@@ -104,11 +104,13 @@ def test_git_inference_single_image(image_path, model_name, prefix):
     input_ids = [tokenizer.cls_token_id] + payload
 
     with torch.no_grad():
-        result = model({
-            'image': img,
-            'prefix': torch.tensor(input_ids).unsqueeze(0),
-        })
-    
+        result = {
+                    'image': img,
+                    'prefix': torch.tensor(input_ids).unsqueeze(0),
+                }
+        if CUDA:
+            result["prefix"] = result["prefix"].cuda()
+        result = model(result)
     cap = tokenizer.decode(result['predictions'][0].tolist(), skip_special_tokens=True)
     logging.info('output: {}'.format(cap))
 
