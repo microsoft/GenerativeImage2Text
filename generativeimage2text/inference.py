@@ -25,6 +25,7 @@ from .process_image import load_image_by_pil
 from .model import get_git_model
 
 
+CUDA = torch.cuda.is_available()
 
 class MinMaxResizeForTest(object):
     def __init__(self, min_size, max_size):
@@ -84,9 +85,11 @@ def test_git_inference_single_image(image_path, model_name, prefix):
     pretrained = f'output/{model_name}/snapshot/model.pt'
     checkpoint = torch_load(pretrained)['model']
     load_state_dict(model, checkpoint)
-    model.cuda()
+    model.cuda() if CUDA else None
     model.eval()
-    img = [i.unsqueeze(0).cuda() for i in img]
+    img = [i.unsqueeze(0) for i in img]
+    if CUDA:
+        img = [i.cuda() for i in img]
 
     # prefix
     max_text_len = 40
@@ -103,8 +106,9 @@ def test_git_inference_single_image(image_path, model_name, prefix):
     with torch.no_grad():
         result = model({
             'image': img,
-            'prefix': torch.tensor(input_ids).unsqueeze(0).cuda(),
+            'prefix': torch.tensor(input_ids).unsqueeze(0),
         })
+    
     cap = tokenizer.decode(result['predictions'][0].tolist(), skip_special_tokens=True)
     logging.info('output: {}'.format(cap))
 
@@ -148,9 +152,9 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
     checkpoint = torch_load(pretrained)['model']
     load_state_dict(model, checkpoint)
     model.eval()
-
-    torch.cuda.set_device(get_mpi_local_rank())
-    model.cuda()
+    if CUDA:
+        torch.cuda.set_device(get_mpi_local_rank())
+        model.cuda()
 
     # prefix
     max_text_len = 40
@@ -177,7 +181,7 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                 q_info = json.loads(q_info)
                 img = pilimg_from_base64(image_col)
                 img = transforms(img)
-                img = img.cuda().unsqueeze(0)
+                img = img.cuda().unsqueeze(0) if CUDA else img.unsqueeze(0)
                 for q in q_info:
                     prefix = q['question']
                     prefix_encoding = tokenizer(prefix,
@@ -190,10 +194,13 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                         payload = payload[-(max_text_len - 2):]
                     input_ids = [tokenizer.cls_token_id] + payload
                     with torch.no_grad():
-                        result = model({
+                        result = {
                             'image': img,
-                            'prefix': torch.tensor(input_ids).unsqueeze(0).cuda(),
-                        })
+                            'prefix': torch.tensor(input_ids).unsqueeze(0),
+                        }
+                        if CUDA:
+                            result["prefix"] = result["prefix"].cuda()
+                        result = model(result)
                     answer = tokenizer.decode(result['predictions'][0].tolist(), skip_special_tokens=True)
                     result = {'answer': answer, 'question_id': q['question_id']}
                     yield json_dump(result),
@@ -203,7 +210,7 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                 key, col = image_tsv[i]
                 img = pilimg_from_base64(col)
                 img = transforms(img)
-                img = img.cuda().unsqueeze(0)
+                img = img.cuda().unsqueeze(0) if CUDA else img.unsqeeze(0)
                 with torch.no_grad():
                     result = model({
                         'image': img,
