@@ -1,0 +1,48 @@
+name: Test Build
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    test-build:
+        name: "Test Build"
+        runs-on: ubuntu-latest
+        container:
+            image: python:3.8
+
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v2
+              with:
+                  submodules: recursive
+            - name: Install build dependencies
+              run: pip install build virtualenv
+            - name: Test build
+              run: python -m build
+            - name: Verify files in build
+              run: |
+                for f in generativeimage2text/* generativeimage2text/**/*;
+                do
+                    tar -tzvf dist/generativeimage2text*.tar.gz | grep -q $f
+                    if [ $? -eq 1 ]; then
+                        exit 1
+                    fi
+                done
+
+    test-installation:
+        name: "Test Installation"
+        runs-on: ubuntu-latest
+        container:
+            image: python:3.8
+
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v2
+              with:
+                  submodules: recursive
+            - name: Install locally
+              run: pip install -e .
+            - name: Test execution
+              run: python -c "from generativeimage2text.inference import test_git_inference_single_image"
