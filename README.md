@@ -53,22 +53,36 @@ This repo presents some example codes to reproduce some results in
     for a demo purpose. It should be different image frames from a video.
   - `model_name` here can be the following. Performance details can be found in the reference paper.
 
-    | model_name          | Information                                   | Performance             |
-    |---------------------|---------------------------------------------- | ----------------------- |
-    | GIT_BASE            | pretrained on 4M images                       |                         |
-    | GIT_BASE_COCO       | fine-tuned on COCO                            | CIDEr: 131.4            |
-    | GIT_BASE_TEXTCAPS   | fine-tuned on TextCaps for captioning         | CIDEr: 64.9             |
-    | GIT_BASE_VQAv2      | fine-tuned on VQAv2                           | test-dev: 72.72         |
-    | GIT_BASE_TEXTVQA    | fine-tuned on TextVQA                         | val/acc: 18.81          |
-    | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning            | public/test/CIDEr: 60.0 |
-    | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering   | acc: 41.0               |
-    | GIT_LARGE           | pretrained on 14M images                      |                         |
-    | GIT_LARGE_COCO      | fine-tuned on COCO                            | CIDEr: 138.5            |
-    | GIT_LARGE_TEXTCAPS  | fine-tuned on TextCaps for captioning         | CIDEr: 106.3            |
-    | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                           | test-dev: 75.51         |
-    | GIT_LARGE_TEXTVQA   | fine-tuned on TextVQA                         | val/acc: 37.47          |
-    | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning            | public/test/CIDEr: 72.5 |
-    | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering   | acc: 42.7               |
+    | model_name          | Information                                         | Performance             |
+    |---------------------|-----------------------------------------------------|------------------------ |
+    | GIT_BASE            | pretrained on 4M images                             |                         |
+    | GIT_BASE_COCO       | fine-tuned on COCO                                  | CIDEr: 131.4            |
+    | GIT_BASE_TEXTCAPS   | fine-tuned on TextCaps for captioning               | val/CIDEr: 64.9         |
+    | GIT_BASE_VQAv2      | fine-tuned on VQAv2                                 | test-dev: 72.72         |
+    | GIT_BASE_TEXTVQA    | fine-tuned on TextVQA                               | val/acc: 18.81          |
+    | GIT_BASE_VATEX      | fine-tuned on VATEX for captioning                  | public/test/CIDEr: 60.0 |
+    | GIT_BASE_MSRVTT_QA  | fine-tuned on MSRVTT for question answering         | acc: 41.0               |
+    | GIT_LARGE           | pretrained on 14M images                            |                         |
+    | GIT_LARGE_COCO      | fine-tuned on COCO                                  | CIDEr: 138.5            |
+    | GIT_LARGE_TEXTCAPS  | fine-tuned on TextCaps for captioning               | val/CIDEr: 106.3        |
+    | GIT_LARGE_VQAv2     | fine-tuned on VQAv2                                 | test-dev: 75.51         |
+    | GIT_LARGE_TEXTVQA   | fine-tuned on TextVQA                               | val/acc: 37.47          |
+    | GIT_LARGE_VATEX     | fine-tuned on VATEX for captioning                  | public/test/CIDEr: 72.5 |
+    | GIT_LARGE_MSRVTT_QA | fine-tuned on MSRVTT for question answering         | acc: 42.7               |
+
+  - In the dataset of cc12m, the caption may contain some special tags to hide
+    person names and the
+    model might also predict such special tokens. To eliminate this issue, we
+    remove these captions (around 25\% in cc12m), and re-trained the
+    large-sized model. The base-sized model is not affected as cc12 is not part
+    of the training data.
+
+    | model_name          | Information                                         | Performance             |
+    |---------------------|-----------------------------------------------------|------------------------ |
+    | GIT_LARGE_R         | pretrained on 14M images with special tag removed   |                         |
+    | GIT_LARGE_R_COCO    | fine-tuned on COCO                                  | CIDEr: 137.6            |
+    | GIT_LARGE_R_TEXTCAPS| fine-tuned on TextCaps for captioning               | val/CIDEr: 105.3        |
+
 
 - Inference on a [TSV](https://en.wikipedia.org/wiki/Tab-separated_values) file, which is a collection of multiple images.
   - Data format (for information only)
