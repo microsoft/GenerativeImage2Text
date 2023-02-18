@@ -273,6 +273,10 @@ Please consider to cite the following reference if it helps.
 }
 ```
 
+# Misc
+
+The model is now [available](https://huggingface.co/docs/transformers/model_doc/git) in 🤗 Transformers. You can also find a fine-tuning guide on image captioning with GIT [here](https://huggingface.co/docs/transformers/main/en/tasks/image_captioning). Thanks to [Niels Rogge](https://github.com/NielsRogge) for contributing the model to 🤗 Transformers and [Sayak Paul](https://github.com/sayakpaul) for the fine-tuning guide. 
+
 # Acknowledgement
 Part of the code is based on
 [transformers](https://github.com/huggingface/transformers),
