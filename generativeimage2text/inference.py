@@ -24,7 +24,8 @@ from .torch_common import load_state_dict
 from .process_image import load_image_by_pil
 from .model import get_git_model
 
-
+import os
+os.environ['AZFUSE_TSV_USE_FUSE'] = '1'
 
 class MinMaxResizeForTest(object):
     def __init__(self, min_size, max_size):
@@ -109,7 +110,7 @@ def test_git_inference_single_image(image_path, model_name, prefix):
     logging.info('output: {}'.format(cap))
 
 def get_image_transform(param):
-    crop_size = param.get('test_crop_size', 224)
+    crop_size = param.get('test_crop_size', 100)
     if 'test_respect_ratio_max' in param:
         trans = [
             MinMaxResizeForTest(crop_size, param['test_respect_ratio_max'])
@@ -131,7 +132,7 @@ def get_image_transform(param):
     transforms = Compose(trans)
     return transforms
 
-def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
+def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv, model = None):
     param = {}
     if File.isfile(f'output/{model_name}/parameter.yaml'):
         param = load_from_yaml_file(f'output/{model_name}/parameter.yaml')
@@ -142,15 +143,17 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
 
     transforms = get_image_transform(param)
 
-    # model
-    model = get_git_model(tokenizer, param)
-    pretrained = f'output/{model_name}/snapshot/model.pt'
-    checkpoint = torch_load(pretrained)['model']
-    load_state_dict(model, checkpoint)
+    if model is None:
+        model = get_git_model(tokenizer, param)
+        pretrained = f'output/{model_name}/snapshot/model.pt'
+        checkpoint = torch_load(pretrained)['model']
+        load_state_dict(model, checkpoint)
+    
     model.eval()
 
     torch.cuda.set_device(get_mpi_local_rank())
     model.cuda()
+    model.half()
 
     # prefix
     max_text_len = 40
@@ -162,7 +165,7 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
         curr_out_tsv = get_rank_specific_tsv(rank)
     else:
         curr_out_tsv = out_tsv
-    total = len(image_tsv)
+    total = len(image_tsv)//5
     curr_size = (total + world_size - 1) // world_size
     curr_start = curr_size * rank
     curr_end = curr_start + curr_size
@@ -203,11 +206,12 @@ def test_git_inference_single_tsv(image_tsv, model_name, question_tsv, out_tsv):
                 key, col = image_tsv[i]
                 img = pilimg_from_base64(col)
                 img = transforms(img)
-                img = img.cuda().unsqueeze(0)
+                img = img.cuda().half().unsqueeze(0)
                 with torch.no_grad():
-                    result = model({
-                        'image': img,
-                    })
+                    with torch.cuda.amp.autocast():
+                        result = model({
+                            'image': img,
+                        })
                 cap = tokenizer.decode(result['predictions'][0].tolist(), skip_special_tokens=True)
                 yield key, json_dump([{'caption': cap}])
     tsv_writer(gen_rows(), curr_out_tsv)

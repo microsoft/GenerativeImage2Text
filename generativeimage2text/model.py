@@ -39,14 +39,6 @@ def get_git_model(tokenizer, param):
         length_penalty=0.6,
     )
 
-    #from .trie_decoder import TrieAutoRegressiveBeamSearch, get_trie
-    #decoder = TrieAutoRegressiveBeamSearch(
-        #eos_index=tokenizer.sep_token_id,
-        #max_steps=1022,
-        #beam_size=1,
-        #trie=get_trie(tokenizer),
-    #)
-
     model = CaptioningModel(
         image_encoder,
         text_decoder,
@@ -55,7 +47,8 @@ def get_git_model(tokenizer, param):
         eos_index=tokenizer.sep_token_id,
         tokenizer=tokenizer,
         use_history_for_infer=True,
-        loss_type='smooth',
+        #loss_type='smooth',
+        loss_type='l1',
         num_image_with_embedding=param.get('num_image_with_embedding')
     )
     return model

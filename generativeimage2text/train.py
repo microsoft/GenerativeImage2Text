@@ -33,7 +33,10 @@ from .data_layer.transform import ImageTransform2Dict
 from .data_layer.transform import get_inception_train_transform
 from .data_layer.builder import collate_fn
 from .model import get_git_model
+from .inference import test_git_inference_single_tsv
 
+import warnings
+warnings.filterwarnings("ignore")
 
 def get_data(image_file, prefix, target, tokenizer, image_transform):
     max_text_len = 40
@@ -53,7 +56,8 @@ def get_data(image_file, prefix, target, tokenizer, image_transform):
     input_ids = [tokenizer.cls_token_id] + payload + [tokenizer.sep_token_id]
     need_predict = [0] + need_predict + [1]
 
-    im = load_image_by_pil(image_file)
+    # im = load_image_by_pil(image_file)
+    im = image_file
 
     data = {
         'caption_tokens': torch.tensor(input_ids),
@@ -212,7 +216,7 @@ def forward_backward_example(image_files, captions, prefixs=None):
     cfg = {
         'crop_region_extend_in_datatransform': 4,
         'data_normalize': 'clip',
-        'train_crop_size': 224,
+        'train_crop_size': 100,
         'input_small_scale': 0.8,
         'no_color_jitter': True,
         'no_flip': True,
@@ -243,16 +247,13 @@ def forward_backward_example(image_files, captions, prefixs=None):
     loss.backward()
     logging.info(loss)
 
-def speed_test_forward_backward():
-    duplicate = 32
-    image_files = ['aux_data/images/1.jpg', 'aux_data/images/2.jpg'] * duplicate
-    captions = ['a couple of boats in a large body of water.', 'a view of a mountain with a tree'] * duplicate
 
+def prep_forward_data(tokenizer, image_files = None, captions = None):
     prefixs = [''] * len(captions)
     cfg = {
         'crop_region_extend_in_datatransform': 4,
         'data_normalize': 'clip',
-        'train_crop_size': 224,
+        'train_crop_size': 100,
         'input_small_scale': 0.8,
         'no_color_jitter': True,
         'no_flip': True,
@@ -264,7 +265,7 @@ def speed_test_forward_backward():
     }
     cfg = Config(cfg, {})
     all_data = []
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+   
     image_transform = get_image_transform(cfg)
     for image_file, prefix, target in zip(image_files, prefixs, captions):
         data = get_data(image_file, prefix, target,
@@ -272,9 +273,21 @@ def speed_test_forward_backward():
         all_data.append(data)
     data = collate_fn(all_data)
     logging.info(image_transform)
-    data = recursive_to_device(data, 'cuda')
+    data = recursive_to_device(data, 'cpu')
     data['image'] = data['image'].to(torch.float16)
+    
+    return data
 
+
+def speed_test_forward_backward(image_files = None, captions = None):
+    if image_files is None:
+        duplicate = 32
+        image_files = ['aux_data/images/1.jpg', 'aux_data/images/2.jpg'] * duplicate
+        captions = ['a couple of boats in a large body of water.', 'a view of a mountain with a tree'] * duplicate
+     
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+    data = prep_forward_data(tokenizer, image_files, captions)
+    
     param = {}
     model = get_git_model(tokenizer, param)
     model.train()
@@ -287,18 +300,18 @@ def speed_test_forward_backward():
         loss = sum(loss_dict.values())
         loss.backward()
 
-    import time
-    start = time.time()
-    for iteration in range(1000):
-        loss_dict = model(data)
-        loss = sum(loss_dict.values())
-        loss.backward()
-        if (iteration % 10) == 0:
-            end = time.time()
-            speed = data['image'].shape[0] * 100 / (end - start)
-            if iteration > 0:
-                logging.info('speed = {}'.format(speed))
-            start = time.time()
+    # import time
+    # start = time.time()
+    # for iteration in range(1000):
+    #     loss_dict = model(data)
+    #     loss = sum(loss_dict.values())
+    #     loss.backward()
+    #     if (iteration % 10) == 0:
+    #         end = time.time()
+    #         speed = data['image'].shape[0] * 100 / (end - start)
+    #         if iteration > 0:
+    #             logging.info('speed = {}'.format(speed))
+    #         start = time.time()
 
     logging.info(loss)
 
