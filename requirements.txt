@@ -7,3 +7,6 @@ azfuse @ git+https://github.com/microsoft/azfuse.git
 torchvision
 transformers
 boto3
+pycocotools
+pycocoevalcap
+pytorch-lightning
